@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ColumnMode, NgxDatatableModule, SelectionType } from '@swimlane/ngx-datatable';
 import { Seleccion } from '../../../core/entidades/Seleccion';
 import { SeleccionService } from '../../servicios/seleccion.service';
+import { MatDialog } from '@angular/material/dialog';
+import { SeleccionEditarComponent } from '../seleccion-editar/seleccion-editar.component';
+import { DecidirComponent } from '../decidir/decidir.component';
 
 @Component({
   selector: 'app-seleccion',
@@ -18,7 +21,9 @@ import { SeleccionService } from '../../servicios/seleccion.service';
 })
 export class SeleccionComponent implements OnInit {
 
-  constructor(private servicio: SeleccionService) {
+  constructor(private servicio: SeleccionService,
+    private servicioDialogo: MatDialog
+  ) {
   }
 
   public textoBusqueda: String = "";
@@ -49,13 +54,36 @@ export class SeleccionComponent implements OnInit {
 
   }
   agregar() {
+    const dialogRef = this.servicioDialogo.open(SeleccionEditarComponent,
+      {
+        width: "400px",
+        height: "300px",
+        data: {
+          seleccion: {
+            id: 0,
+            nombre: "",
+            entidad: ""
+          },
+          encabezado: "Agregando una Selección",
+        }
+      }
+    );
 
   }
   modificar() {
 
   }
   verificarEliminar() {
-
+    const dialogRef = this.servicioDialogo.open(DecidirComponent,
+      {
+        width: "300px",
+        height: "200px",
+        data: {
+          encabezado: "Está seguro de eliminar la Selección",
+          id: 0
+        }
+      }
+    );
   }
 
 }
