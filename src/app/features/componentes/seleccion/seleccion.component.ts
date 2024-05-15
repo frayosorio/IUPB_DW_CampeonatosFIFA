@@ -26,7 +26,7 @@ export class SeleccionComponent implements OnInit {
   ) {
   }
 
-  public textoBusqueda: String = "";
+  public textoBusqueda: string = "";
   public selecciones: Seleccion[] = [];
   public columnas = [
     { name: "Selección", prop: "nombre" },
@@ -35,8 +35,18 @@ export class SeleccionComponent implements OnInit {
   public modoColumna = ColumnMode;
   public tipoSeleccion = SelectionType;
 
+  public seleccionEscogida: Seleccion | undefined;
+  public indiceSeleccionEscogida: number = -1;
+
   ngOnInit(): void {
     this.listar();
+  }
+
+  escoger(event: any) {
+    if (event.type == "click") {
+      this.seleccionEscogida = event.row;
+      this.indiceSeleccionEscogida = this.selecciones.findIndex(seleccion => seleccion === this.seleccionEscogida);
+    }
   }
 
   listar() {
@@ -49,9 +59,20 @@ export class SeleccionComponent implements OnInit {
       }
     });
   }
-
   buscar() {
-
+    if (this.textoBusqueda.length == 0) {
+      this.listar();
+    }
+    else {
+      this.servicio.buscar(this.textoBusqueda).subscribe({
+        next: response => {
+          this.selecciones = response;
+        },
+        error: error => {
+          window.alert(error.message);
+        }
+      });
+    }
   }
   agregar() {
     const dialogRef = this.servicioDialogo.open(SeleccionEditarComponent,
@@ -65,25 +86,81 @@ export class SeleccionComponent implements OnInit {
             entidad: ""
           },
           encabezado: "Agregando una Selección",
-        }
+        },
+        disableClose: true,
       }
     );
-
+    dialogRef.afterClosed().subscribe({
+      next: datos => {
+        if (datos) {
+          this.servicio.agregar(datos.seleccion).subscribe({
+            next: response => {
+              this.servicio.buscar(datos.seleccion.nombre).subscribe({
+                next: response => {
+                  this.selecciones = response;
+                },
+                error: error => {
+                  window.alert(error.message);
+                }
+              });
+            },
+            error: error => {
+              window.alert(error.message);
+            }
+          });
+        }
+      }
+    });
   }
   modificar() {
-
+    if (this.seleccionEscogida) {
+      const dialogRef = this.servicioDialogo.open(SeleccionEditarComponent,
+        {
+          width: "400px",
+          height: "300px",
+          data: {
+            seleccion: this.seleccionEscogida,
+            encabezado: `Editando selección [${this.seleccionEscogida.nombre}]`,
+          },
+          disableClose: true,
+        }
+      );
+      dialogRef.afterClosed().subscribe({
+        next: datos => {
+          if (datos) {
+            this.servicio.modificar(datos.seleccion).subscribe({
+              next: response => {
+                this.selecciones[this.indiceSeleccionEscogida] = response;
+              },
+              error: error => {
+                window.alert(error.message);
+              }
+            });
+          }
+        }
+      });
+    }
+    else {
+      window.alert("Debe seleccionar una Selección de la lista");
+    }
   }
   verificarEliminar() {
-    const dialogRef = this.servicioDialogo.open(DecidirComponent,
-      {
-        width: "300px",
-        height: "200px",
-        data: {
-          encabezado: "Está seguro de eliminar la Selección",
-          id: 0
+    if (this.seleccionEscogida) {
+      const dialogRef = this.servicioDialogo.open(DecidirComponent,
+        {
+          width: "300px",
+          height: "200px",
+          data: {
+            encabezado: "Está seguro de eliminar la Selección",
+            id: 0
+          },
+          disableClose: true,
         }
-      }
-    );
+      );
+    }
+    else {
+      window.alert("Debe seleccionar una Selección de la lista");
+    }
   }
 
 }
