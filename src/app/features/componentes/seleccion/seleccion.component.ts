@@ -152,11 +152,33 @@ export class SeleccionComponent implements OnInit {
           height: "200px",
           data: {
             encabezado: "Está seguro de eliminar la Selección",
-            id: 0
+            id: this.seleccionEscogida.id
           },
           disableClose: true,
         }
       );
+
+      dialogRef.afterClosed().subscribe({
+        next: datos => {
+          if (datos) {
+            this.servicio.eliminar(datos.id).subscribe({
+              next: response => {
+                if (response) {
+                  this.listar();
+                  window.alert("Selección retirada con éxito");
+                }
+                else {
+                  window.alert("No se pudo retirar la Selección");
+                }
+              },
+              error: error => {
+                window.alert(error.message);
+              }
+            });
+          }
+        }
+      });
+
     }
     else {
       window.alert("Debe seleccionar una Selección de la lista");
